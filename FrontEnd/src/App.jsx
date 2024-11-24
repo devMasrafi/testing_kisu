@@ -24,7 +24,6 @@ const App = () => {
     }
   };
 
-
   useEffect(() => {
     postInfo();
   }, []);
@@ -71,7 +70,7 @@ const App = () => {
     };
     giveData();
   };
-  console.log(getData, "data save howar por");
+  // console.log(getData, "data save howar por");
 
   // delete
 
@@ -83,29 +82,93 @@ const App = () => {
           "Content-type": "application/json; charset=UTF-8",
         },
       });
-      postInfo()
+      postInfo();
     } catch (error) {
       console.log(error.message);
     }
-    
+  };
+
+  // update post
+  const [openModal, setOpenModal] = useState(false);
+  const [edditInput, setEdditInput] = useState({
+    id: null,
+    title: "",
+    body: "",
+  });
+
+  const handelModal = () => {
+    setOpenModal(true);
+  };
+  const handelClose = () => {
+    setOpenModal(false);
+  };
+
+  const onChangeUpdateValue = (e) => {
+    setEdditInput({
+      ...edditInput,
+      [e.target.name]: e.target.value,
+    });
+  };
+  // console.log(edditInput.id);
+
+  const handelUpdate = async (e) => {
+    e.preventDefault();
+
+    try {
+      const updateResponse = await fetch(`${baseURL}/${edditInput.id}`, {
+        method: "PUT",
+        body: JSON.stringify({
+          title: edditInput.title,
+          body: edditInput.body,
+        }),
+        headers: {
+          "Content-type": "application/json; charset=UTF-8",
+        },
+      });
+
+      const updatedPost = await updateResponse.json();
+      console.log("post Updated", updatedPost);
+
+      setGetData((prev) =>
+        prev.map((post) => (post.id === edditInput.id ? updatedPost : post))
+      );
+
+      handelClose();
+    } catch (error) {
+      console.log(error.message);
+    }
   };
 
   return (
     <>
       {/* showing fetch data as cards */}
-      <div className="container mx-auto bg-gray-400 flex gap-x-3">
+      <div className="relative container mx-auto bg-gray-400 flex gap-x-3">
         {getData.map((posts) => {
           return (
             <div key={posts.id}>
               <div>
                 <ul className="border-2 border-red-400 p-2 bg-blue-400">
+                  {/* <li>{posts.id}</li> */}
                   <li>{posts.title}</li>
                   <li>{posts.body}</li>
                   <button
-                    className="bg-white "
+                    className="bg-white py-1 px-2 "
                     onClick={() => handelDelete(posts.id)}
                   >
                     delete
+                  </button>
+                  <button
+                    onClick={() => {
+                      setEdditInput({
+                        id: posts.id,
+                        title: posts.title,
+                        body: posts.body,
+                      });
+                      handelModal(); // Open modal
+                    }}
+                    className="bg-gray-300 py-1 px-2"
+                  >
+                    update
                   </button>
                 </ul>
               </div>
@@ -113,6 +176,41 @@ const App = () => {
           );
         })}
       </div>
+
+      {/* update field */}
+      {openModal && (
+        <div className="absolute inset-0 flex justify-center items-center ">
+          <form className="flex flex-col gap-y-2 w-[16rem] h-[16rem] p-8 mx-auto bg-gray-400">
+            <input
+              type="text"
+              placeholder="title"
+              name="title"
+              value={edditInput.title}
+              onChange={(e) => {
+                onChangeUpdateValue(e);
+              }}
+              className="rounded px-2"
+            />
+            <input
+              type="text"
+              placeholder="body"
+              name="body"
+              className="rounded px-2"
+              value={edditInput.body}
+              onChange={(e) => {
+                onChangeUpdateValue(e);
+              }}
+            />
+            <button
+              className="px-3 py-1 bg-blue-400 mt-3 rounded"
+              onClick={handelUpdate}
+            >
+              update
+            </button>
+            <button onClick={handelClose}>close</button>
+          </form>
+        </div>
+      )}
 
       <div className=" container mx-auto bg-slate-500 ">
         <form
